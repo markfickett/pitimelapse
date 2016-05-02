@@ -1,4 +1,5 @@
 #!/bin/bash
+# Take photos, rsync them to a remote server, and delete old ones.
 set -e
 # Where is this file installed?
 TIMELAPSE_DIR=/home/pi/timelapse
@@ -18,8 +19,21 @@ TIMELAPSE_DIR=/home/pi/timelapse
 source $TIMELAPSE_DIR/project.sh
 
 IMG_DIR=$TIMELAPSE_DIR/$PROJECT/`date -u +%Y`/`date -u +%m`/`date -u +%d`
-
 mkdir -p $IMG_DIR
+
+# Check disk usage and delete old images if free space is getting low.
+function check_used()
+{
+  USED_PERCENT=`df -h $IMG_DIR | tail -1 | sed 's/.*\s\([0-9]\+\)%.*/\1/g'`
+}
+check_used
+while [ $USED_PERCENT -ge 85 ]
+do
+  OLDEST=`ls -t $TIMELAPSE_DIR/$PROJECT/*/*/*/* | tail -1`
+  rm $OLDEST
+  check_used
+done
+
 raspistill \
   --output ${IMG_DIR}/`date -u +%H_%M_%S`.jpg \
   --quality 85
