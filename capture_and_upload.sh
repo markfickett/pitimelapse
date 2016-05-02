@@ -22,4 +22,6 @@ raspistill \
   --output ${IMG_DIR}/`date -u +%H_%M_%S`.jpg \
   --quality 85
 
+# To set up SSH keys for rsyncing without a password prompt, see:
+# https://github.com/markfickett/pitimelapse.git
 rsync --archive --recursive $TIMELAPSE_DIR/$PROJECT $REMOTE_PATH
