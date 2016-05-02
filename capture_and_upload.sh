@@ -9,6 +9,9 @@ TIMELAPSE_DIR=/home/pi/timelapse
 # and add (adjusting the path)
 #   */10 * * * * /home/pi/timelapse/capture_and_upload.sh
 
+# To disable the Pi camera's LED, reboot after running
+#  sudo echo disable_camera_led=1 >> /boot/config.txt
+
 # Project specific details. This file is expected to define:
 #   PROJECT: name used for local and remote subdirectories.
 #   REMOTE_PATH: user@host:path to sync files to. (To recreate project/
