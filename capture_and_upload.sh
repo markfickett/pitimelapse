@@ -13,6 +13,8 @@ TIMELAPSE_DIR=/home/pi/timelapse
 #   REMOTE_PATH: user@host:path to sync files to. (To recreate project/
 #       subdirectories under $REMOTE_PATH, it should not have a trailing slash
 #       and should not include the project subdirectory.)
+# and optionally
+#   PAUSE: if non-empty, skip syncing to the REMOTE_PATH.
 source $TIMELAPSE_DIR/project.sh
 
 IMG_DIR=$TIMELAPSE_DIR/$PROJECT/`date -u +%Y`/`date -u +%m`/`date -u +%d`
@@ -24,4 +26,9 @@ raspistill \
 
 # To set up SSH keys for rsyncing without a password prompt, see:
 # https://github.com/markfickett/pitimelapse.git
-rsync --archive --recursive $TIMELAPSE_DIR/$PROJECT $REMOTE_PATH
+if [ -z "$PAUSE" ]
+then
+  rsync --archive --recursive $TIMELAPSE_DIR/$PROJECT $REMOTE_PATH
+else
+  echo PAUSEd, skipping sync
+fi
