@@ -6,19 +6,23 @@
 SRC=/mnt/data/timelapse
 DST=~/public_html
 
-# sudo apt-get install imagemagick
-MONTAGE=`which montage`
-
 for project in `ls $SRC`
 do
+  if [ $project = 'var' ]
+  then
+    continue
+  fi
   LATEST=`ls -1 $SRC/$project/*/*/*/* | tail -1`
   mkdir -p $DST/$project
-  if [ -n "$MONTAGE" ]
-  then
-    $MONTAGE -background black -fill white \
-        -geometry +0+0 -label "$LATEST" -pointsize 24 \
-        $LATEST $DST/$project/latest.jpg
-  else
-    cp $LATEST $DST/$project/latest.jpg
-  fi
+  # sudo apt-get install imagemagick
+  width=`identify -format %W $LATEST`
+  convert \
+      -background '#0008' -fill white \
+      -gravity west -size ${width}x30 \
+      caption:"$LATEST" \
+      $LATEST \
+      +swap \
+      -gravity south \
+      -composite \
+      $DST/$project/latest.jpg
 done
