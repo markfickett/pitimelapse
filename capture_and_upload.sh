@@ -37,15 +37,18 @@ do
   check_used
 done
 
-raspistill \
-  --output ${IMG_DIR}/`date -u +%H_%M_%S`.jpg \
-  --quality 85
+IMG=${IMG_DIR}/`date -u +%H_%M_%S`.jpg
+raspistill --output $IMG --quality 85
 
 # To set up SSH keys for rsyncing without a password prompt, see:
 # https://github.com/markfickett/pitimelapse.git
 if [ -z "$PAUSE" ]
 then
-  rsync --archive --recursive $TIMELAPSE_DIR/$PROJECT $REMOTE_PATH
+  if ! flock -n rsync.lock \
+      rsync --archive --recursive $TIMELAPSE_DIR/$PROJECT $REMOTE_PATH
+  then
+    echo different rsync already in progress after taking $IMG
+  fi
 else
   echo PAUSEd, skipping sync
 fi
