@@ -6,6 +6,16 @@ DST=~/public_html
 SIZE=1280
 WATERMARK=markfickett.com
 
+if [ "$1" = "daily" ]
+then
+  # If SLICE is specified, only process the input from this offset to the end of
+  # the input. 5.76s = 24 hours lapsed (25fps playback of 10m interval photos).
+  SLICE="-sseof -5.76"
+  VIDEONAME=daily
+else
+  VIDEONAME=full
+fi
+
 for project in `ls $SRC`
 do
   echo $project
@@ -18,7 +28,7 @@ do
   for full_res in `ls -1 $SRC/$project/*/*/*/*`
   do
     LOCAL=`echo ${full_res#$SRC/$project/} | tr '/' '_'`
-    RESIZED=$RESIZED_DIR/$LOCAL
+    RESIZED=${RESIZED_DIR}/$LOCAL
     if [ -s $full_res -a ! -f $RESIZED ]
     then
       # sudo apt-get install imagemagick
@@ -31,14 +41,15 @@ do
           +swap \
           -gravity south \
           -composite \
-          $RESIZED
+          ${RESIZED}
     fi
   done
 
-  OUT_VIDEO=$DST/$project/full.mp4
+  OUT_VIDEO=$DST/$project/${VIDEONAME}.mp4
+
   if [ ! -f $OUT_VIDEO -o \( $full_res -nt $OUT_VIDEO \) ]
   then
-    ffmpeg -r 15 -y \
+    ffmpeg -r 15 -y $SLICE \
         -pattern_type glob -i $RESIZED_DIR/'*'.jpg \
         -c:v libx264 $OUT_VIDEO
   fi
