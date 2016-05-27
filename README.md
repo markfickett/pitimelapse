@@ -22,6 +22,21 @@ I set up a Pi B+ on a 3D-printed suction cup window mount, syncing images over W
 *   Raspberry Pi camera ([$20](http://adafru.it/1367))
 *   [USB WiFi module with antenna for $20](http://adafru.it/1030) with significantly more reliable connection than small/no antenna options; or [bare-board USB WiFi dongle for $4](https://www.amazon.com/dp/B0113VBNKA)
 *   Suction cups from the local hardware store
-*   [3D printed Pi/camera suction cup mount](http://www.thingiverse.com/thing:1592053), Thingiverse will print it for $20 shipped.
+*   [3D printed Pi/camera suction cup mount](http://www.thingiverse.com/thing:1592053), [modeled in TinkerCad](https://tinkercad.com/things/8DpHAWdNvYx); Thingiverse will print it for $20 shipped.
 
 At almost $100, this setup is actually somewhat competitive with commercial WiFi webcams, especially considering 5MP camera resolution, customizable software, and reusable parts.
+
+## Headless image preview
+
+There's [a Pi forum thread](https://www.raspberrypi.org/forums/viewtopic.php?t=119960&p=812018) outlining how to view a video stream from a Pi over a network using VLC. Briefly:
+
+```
+sudo apt-get update && sudo apt-get install vlc
+raspivid -o - -t 0 -n -w 640 -h 480 -fps 25 | cvlc -vvv stream:///dev/stdin --sout '#standard{access=http,mux=ts,dst=:8081}' :demux=h264
+```
+
+Then view `http://localhost:8081` in VLC (`mplayer` also works).
+
+## Aligning cameras
+
+To align multiple cameras to the same point (ex: capturing a stereo pair), you can add crude crosshair in VLC. Following [VLC's help doc on adding overlays](https://www.vlchelp.com/add-logo-watermarks-over-videos-vlc/), use `Window > Video Effects...` then in the `Misc` tab, `Add text`.
