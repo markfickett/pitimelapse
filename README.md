@@ -84,6 +84,6 @@ How to view a video feed from the Pi?
 
 *   SSH into the Pi (using the reverse tunnel if necessary).
 *   Start the VLC stream.
-*   `pi@pi $ ssh -R 8082:localhost:8081 timelapse@timelapse.com -Nv` forwards connections from `timelapse.com:8082` to the Pi's port `8081`. But this is a reverse tunnel so `timelapse.com:8082` is only available locally.
+*   `pi@pi $ ssh -R 8082:localhost:8081 timelapse@timelapse.com -Nv` forwards connections from `timelapse.com:8082` to the Pi's port `8081`. But this is a reverse tunnel so `timelapse.com:8082` is only available locally (I can't use `-g`).
 *   `me@laptop $ ssh -L 8083:localhost:8082 me@timelapse.com -Nv` forwards connections to `localhost:8083` on my laptop to `timelapse.com:8082`, matching up with the other tunnel.
 *   On my laptop, open VLC and view `http://localhost:8083`.
