@@ -39,7 +39,7 @@ Then view `http://localhost:8081` in VLC (`mplayer` also works).
 
 ## Aligning cameras
 
-To align multiple cameras to the same point (ex: capturing a stereo pair), you can add crude crosshair in VLC. Following [VLC's help doc on adding overlays](https://www.vlchelp.com/add-logo-watermarks-over-videos-vlc/), use `Window > Video Effects...` then in the `Misc` tab, `Add text`.
+To align multiple cameras to the same point (ex: capturing a stereo pair), you can add crude crosshairs in VLC. Following [VLC's help doc on adding overlays](https://www.vlchelp.com/add-logo-watermarks-over-videos-vlc/), use `Window > Video Effects...` then in the `Misc` tab, `Add text`.
 
 ## WiFi configuration
 
