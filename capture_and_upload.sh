@@ -41,7 +41,7 @@ IMG=${IMG_DIR}/`date -u +%H_%M_%S`.jpg
 raspistill --output $IMG --quality 85
 
 # To set up SSH keys for rsyncing without a password prompt, see:
-# https://github.com/markfickett/pitimelapse.git
+# https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2
 if [ -z "$PAUSE" ]
 then
   if ! flock -n rsync.lock \
