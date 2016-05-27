@@ -40,3 +40,50 @@ Then view `http://localhost:8081` in VLC (`mplayer` also works).
 ## Aligning cameras
 
 To align multiple cameras to the same point (ex: capturing a stereo pair), you can add crude crosshair in VLC. Following [VLC's help doc on adding overlays](https://www.vlchelp.com/add-logo-watermarks-over-videos-vlc/), use `Window > Video Effects...` then in the `Misc` tab, `Add text`.
+
+## WiFi configuration
+
+For an open network named `MIT GUEST`, edit `/etc/wpa_supplicant/wap_supplicant.conf` and add:
+
+```
+network = {
+  ssid="MIT GUEST"
+  key_mgmt=NONE
+}
+```
+
+More in the [Pi WiFi docs](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).
+
+## SSH / remote video preview
+
+My time lapse cameras are on a somewhat flaky public WiFi network. They don't have public IP addresses, they may get new local IPs, and anyway clients are on private VLANs so I can't see the Pis even when I'm on the same network.
+
+### SSH
+
+How to get occasional SSH access?
+
+Suppose I have a server `timelapse.com`, with SSH access from the Pis and from my laptop.
+
+I add this to the Pi's `crontab`:
+
+```
+0 * * * * flock -n /tmp/sshreverse.lock ssh -R 2220:localhost:22 timelapse@timelapse.com -Nv
+```
+
+Now every hour, it tries to reopen a reverse tunnel. Connections to `timelapse.com:2220` are forwarded to the Pi's port `22` (standard SSH port). Using `flock -n` means the cron job will only attempt to connect if the previous SSH command has exited. I [set up SSH keys](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2) so the Pi doesn't need a password to log in to `timelapse.com`.
+
+Reverse tunnels (even to non-privileged ports) are only accessible locally, so first I SSH into `timelapse.com`, and then I can SSH into the Pi:
+
+```
+me@timelapse.com $ ssh -p 2220 pi@localhost
+```
+
+### Video Preview
+
+How to view a video feed from the Pi?
+
+*   SSH into the Pi (using the reverse tunnel if necessary).
+*   Start the VLC stream.
+*   `pi@pi $ ssh -R 8082:localhost:8081 timelapse@timelapse.com -Nv` forwards connections from `timelapse.com:8082` to the Pi's port `8081`. But this is a reverse tunnel so `timelapse.com:8082` is only available locally.
+*   `me@laptop $ ssh -L 8083:localhost:8082 me@timelapse.com -Nv` forwards connections to `localhost:8083` on my laptop to `timelapse.com:8082`, matching up with the other tunnel.
+*   On my laptop, open VLC and view `http://localhost:8083`.
