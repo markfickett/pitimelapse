@@ -18,6 +18,9 @@ TIMELAPSE_DIR=/home/pi/timelapse
 #       subdirectories under $REMOTE_PATH, it should not have a trailing slash
 #       and should not include the project subdirectory.)
 # and optionally
+#   LOCATION: either a city name or a lat/lng pair as '40.02 -115.78'. If given,
+#       switch the camera to night mode for pictures when the sun is down.
+#       Requires PyEphem (sudo pip install ephem).
 #   PAUSE: if non-empty, skip syncing to the REMOTE_PATH.
 source $TIMELAPSE_DIR/project.sh
 
@@ -37,8 +40,16 @@ do
   check_used
 done
 
+if [ -n "${LOCATION}" ]
+then
+  if $TIMELAPSE_DIR/is_night.py "$LOCATION"
+  then
+    NIGHT_MODE="--exposure night"
+  fi
+fi
+
 IMG=${IMG_DIR}/`date -u +%H_%M_%S`.jpg
-raspistill --output $IMG --quality 85
+raspistill --output $IMG --quality 85 $NIGHT_MODE
 
 # To set up SSH keys for rsyncing without a password prompt, see:
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2
