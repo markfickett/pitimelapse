@@ -19,7 +19,7 @@ fi
 for project in `ls $SRC`
 do
   echo $project
-  if [ $project = 'var' ]
+  if [ $project = 'var' -o $project = 'archive' ]
   then
     continue
   fi
