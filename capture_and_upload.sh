@@ -22,6 +22,8 @@ TIMELAPSE_DIR=/home/pi/timelapse
 #       switch the camera to night mode for pictures when the sun is down.
 #       Requires PyEphem (sudo pip install ephem).
 #   PAUSE: if non-empty, skip syncing to the REMOTE_PATH.
+#   RASPISTILL_OPTS: extra flags passed to the raspistill command, for example
+#       "--hflip --vflip".
 source $TIMELAPSE_DIR/project.sh
 
 IMG_DIR=$TIMELAPSE_DIR/$PROJECT/`date -u +%Y`/`date -u +%m`/`date -u +%d`
@@ -49,7 +51,7 @@ then
 fi
 
 IMG=${IMG_DIR}/`date -u +%H_%M_%S`.jpg
-raspistill --output $IMG --quality 85 $NIGHT_MODE
+raspistill --output $IMG --quality 85 $RASPISTILL_OPTS $NIGHT_MODE
 
 # To set up SSH keys for rsyncing without a password prompt, see:
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2
