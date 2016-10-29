@@ -8,7 +8,7 @@ DST=~/public_html
 
 for project in `ls $SRC`
 do
-  if [ $project = 'var' ]
+  if [ $project = 'var' -o $project = 'archive' ]
   then
     continue
   fi
