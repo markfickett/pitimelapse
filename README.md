@@ -43,7 +43,7 @@ To align multiple cameras to the same point (ex: capturing a stereo pair), you c
 
 ## WiFi configuration
 
-For an open network named `MIT GUEST`, edit `/etc/wpa_supplicant/wap_supplicant.conf` and add:
+For an open network named `MIT GUEST`, edit `/etc/wpa_supplicant/wpa_supplicant.conf` and add:
 
 ```
 network = {
