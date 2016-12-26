@@ -14,6 +14,7 @@ TIMELAPSE_DIR=/home/pi/timelapse
 
 # Project specific details. This file is expected to define:
 #   PROJECT: name used for local and remote subdirectories.
+#   IMG_BASE: if set, store images here instead of under TIMELAPSE_DIR
 #   REMOTE_PATH: user@host:path to sync files to. (To recreate project/
 #       subdirectories under $REMOTE_PATH, it should not have a trailing slash
 #       and should not include the project subdirectory.)
@@ -25,9 +26,14 @@ TIMELAPSE_DIR=/home/pi/timelapse
 #   RASPISTILL_OPTS: extra flags passed to the raspistill command, for example
 #       "--hflip --vflip".
 source $TIMELAPSE_DIR/project.sh
+if [ -z "$IMG_BASE" ]
+then
+  IMG_BASE=$TIMELAPSE_DIR
+fi
 
-IMG_DIR=$TIMELAPSE_DIR/$PROJECT/`date -u +%Y`/`date -u +%m`/`date -u +%d`
+IMG_DIR=$IMG_BASE/$PROJECT/`date -u +%Y`/`date -u +%m`/`date -u +%d`
 mkdir -p $IMG_DIR
+echo mkdir $IMG_DIR
 
 # Check disk usage and delete old images if free space is getting low.
 function check_used()
@@ -37,14 +43,14 @@ function check_used()
 check_used
 while [ $USED_PERCENT -ge 85 ]
 do
-  OLDEST=`ls -t $TIMELAPSE_DIR/$PROJECT/*/*/*/* | tail -1`
+  OLDEST=`ls -t $IMG_BASE/$PROJECT/*/*/*/* | tail -1`
   rm $OLDEST
   check_used
 done
 
 if [ -n "${LOCATION}" ]
 then
-  if $TIMELAPSE_DIR/is_night.py "$LOCATION"
+  if $TIMELAPSE_DIR/is_night.py $LOCATION
   then
     NIGHT_MODE="--exposure night"
   fi
@@ -58,10 +64,8 @@ raspistill --output $IMG --quality 85 $RASPISTILL_OPTS $NIGHT_MODE
 if [ -z "$NO_RSYNC" ]
 then
   if ! flock -n rsync.lock \
-      rsync --archive --recursive $TIMELAPSE_DIR/$PROJECT $REMOTE_PATH
+      rsync --archive --recursive $IMG_BASE/$PROJECT $REMOTE_PATH
   then
     echo different rsync already in progress after taking $IMG
   fi
-else
-  echo NO_RSYNC, skipping sync
 fi
