@@ -5,6 +5,8 @@ SRC=/mnt/data/timelapse
 DST=~/public_html
 SIZE=1280
 WATERMARK=markfickett.com
+FPS=8
+#FPS=30
 
 if [ "$1" = "daily" ]
 then
@@ -49,7 +51,7 @@ do
 
   if [ ! -f $OUT_VIDEO -o \( $full_res -nt $OUT_VIDEO \) ]
   then
-    ffmpeg -r 15 -y $SLICE \
+    ffmpeg -r $FPS -y $SLICE \
         -pattern_type glob -i $RESIZED_DIR/'*'.jpg \
         -c:v libx264 $OUT_VIDEO
   fi
