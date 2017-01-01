@@ -54,6 +54,8 @@ network = {
 
 More in the [Pi WiFi docs](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).
 
+Setting up WiFi may be easiest over the [RPi Serial Connection](http://elinux.org/RPi_Serial_Connection), see also a [Pi Zero walkthrough](http://hackers.gallery/850/misc/raspberry-pi-zero-setting-up-wifi-over-the-serial-console).
+
 ## SSH / remote video preview
 
 My time lapse cameras are on a somewhat flaky public WiFi network. They don't have public IP addresses, they may get new local IPs, and anyway clients are on private VLANs so I can't see the Pis even when I'm on the same network.
