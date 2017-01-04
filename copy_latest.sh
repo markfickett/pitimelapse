@@ -12,7 +12,8 @@ do
   then
     continue
   fi
-  LATEST=`ls -1 $SRC/$project/*/*/*/* | tail -1`
+  # TODO Match either pattern without errors.
+  LATEST=`ls -1 $SRC/$project/*/*/*/* $SRC/$project/*.jpg | tail -1`
   mkdir -p $DST/$project
   # sudo apt-get install imagemagick
   width=`identify -format %W $LATEST`

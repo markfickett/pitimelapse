@@ -27,7 +27,7 @@ do
   fi
   RESIZED_DIR=${SRC}/var/${project}_${SIZE}
   mkdir -p $RESIZED_DIR
-  for full_res in `ls -1 $SRC/$project/*/*/*/*`
+  for full_res in `ls -1 $SRC/$project/*/*/*/* $SRC/$project/*.jpg`
   do
     LOCAL=`echo ${full_res#$SRC/$project/} | tr '/' '_'`
     RESIZED=${RESIZED_DIR}/$LOCAL
@@ -51,8 +51,10 @@ do
 
   if [ ! -f $OUT_VIDEO -o \( $full_res -nt $OUT_VIDEO \) ]
   then
+    set +e  # Allow errors in case there are too few frames for $SLICE.
     ffmpeg -r $FPS -y $SLICE \
         -pattern_type glob -i $RESIZED_DIR/'*'.jpg \
         -c:v libx264 $OUT_VIDEO
+    set -e
   fi
 done
