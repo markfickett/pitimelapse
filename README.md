@@ -8,7 +8,7 @@ On a Raspberry Pi (`capture_and_upload.sh`)
 *   Use `rsync` to copy images to a remote server.
 *   Monitor free space and trim old images from local storage.
 
-On a server storing the images (`copy_latest.sh` and `make_videos.sh`)
+On a server storing the images (`copy_latest.py` and `make_videos.py`)
 
 *   Copy the latest image from each Pi/project to a web server directory.
 *   Add filename / copyright overlays to images, create proxy resolution images.
