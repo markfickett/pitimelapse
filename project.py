@@ -20,3 +20,10 @@ def IterProject(project_dir_path, reverse=True):
     # Expect a flat directory of YYYY_MM_DD_HH_MM_SS.ext files.
     for filename in sorted(filenames, reverse=reverse):
       yield os.path.join(project_dir_path, filename)
+
+
+def GetProjectLatest(project_src_path):
+  try:
+    return iter(IterProject(project_src_path, reverse=True)).next()
+  except StopIteration:
+    return None

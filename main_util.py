@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 
 
@@ -33,3 +34,9 @@ def GetSrcDstParser():
       'dst',
       help='Output directory in which to create project subdir and latest.jpg.')
   return parser
+
+
+def ConfigureLogging():
+  logging.basicConfig(
+      format='%(levelname)s %(asctime)s %(filename)s:%(lineno)s: %(message)s',
+      level=logging.INFO)

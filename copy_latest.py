@@ -10,20 +10,21 @@ Install with crontab -e
 offset from time lapse camera's upload time.
 """
 
+import logging
 import os
 import re
 import subprocess
 
 from main_util import ApplyPerProject
+from main_util import ConfigureLogging
 from main_util import GetSrcDstParser
+from project import GetProjectLatest
 from project import IterProject
 
 
 def CopyLatest(project_src_path, project_latest_dir_path):
-  try:
-    latest_src_path = iter(
-        IterProject(project_src_path, reverse=True)).next()
-  except StopIteration:
+  latest_src_path = GetProjectLatest(project_src_path)
+  if not latest_src_path:
     return
   if not os.path.isdir(project_latest_dir_path):
     os.makedirs(project_latest_dir_path)
@@ -46,9 +47,11 @@ def CopyLatest(project_src_path, project_latest_dir_path):
       '-composite',
       latest_dst_path,
   ])
+  logging.info('Copied %s to %s.', latest_src_path, latest_dst_path)
 
 
 if __name__ == '__main__':
+  ConfigureLogging()
   parser = GetSrcDstParser()
   args = parser.parse_args()
   ApplyPerProject(args.src, args.dst, CopyLatest)
