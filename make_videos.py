@@ -26,7 +26,9 @@ def MakeVideo(project_src_dir_path, project_dst_dir_path, fps, realtime_hours):
   proxy_project_path = _UpdateProxies(project_src_dir_path)
   out_video_path = os.path.join(
       project_dst_dir_path,
-      '%s.mp4' % ('' if realtime_hours is None else '%dh' % realtime_hours))
+      '%s_%dfps.mp4' % (
+          '' if realtime_hours is None else '%dh' % realtime_hours,
+          fps))
   if not _LatestImageNewer(project_src_dir_path, out_video_path):
     return
   logging.info(
