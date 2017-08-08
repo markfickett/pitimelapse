@@ -9,17 +9,19 @@ SKIP_PROJECTS = (
 )
 
 
-def ApplyPerProject(src_raw, dst_raw, fn, *args, **kwargs):
-  src_dir_path, dst_dir_path = _Expand(src_raw), _Expand(dst_raw)
+def ApplyPerProject(args, fn, *passthrough_args, **kwargs):
+  src_dir_path, dst_dir_path = _Expand(args.src), _Expand(args.dst)
   processed = []
   for project_dir in os.listdir(src_dir_path):
     if project_dir in SKIP_PROJECTS:
+      continue
+    if args.project and project_dir not in args.project:
       continue
     processed.append(project_dir)
     fn(
         os.path.join(src_dir_path, project_dir),
         os.path.join(dst_dir_path, project_dir),
-        *args,
+        *passthrough_args,
         **kwargs)
   logging.info(
       'Processed %d projects in %r: %s.',
@@ -38,6 +40,9 @@ def GetSrcDstParser():
   parser.add_argument(
       'dst',
       help='Output directory in which to create project subdir and latest.jpg.')
+  parser.add_argument(
+      '-p', '--project', action='append',
+      help='Process only these projects.')
   return parser
 
 

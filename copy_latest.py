@@ -54,4 +54,4 @@ if __name__ == '__main__':
   ConfigureLogging()
   parser = GetSrcDstParser()
   args = parser.parse_args()
-  ApplyPerProject(args.src, args.dst, CopyLatest)
+  ApplyPerProject(args, CopyLatest)
