@@ -3,10 +3,12 @@
 Makes a time lapse video from stills.
 """
 
+import datetime
 import logging
 import os
 import re
 import subprocess
+import tempfile
 
 from main_util import ApplyPerProject
 from main_util import ConfigureLogging
@@ -18,15 +20,24 @@ from project import IterProject
 PROXY_SIZE = 1280
 PROXY_DIR = 'var'  # created as a sibling of the project(s)
 WATERMARK = 'markfickett.com'
-FRAMES_CAPTURED_PER_HOUR = 6.0  # Assume all projects take frames every 10m.
 
 
-def MakeVideo(project_src_dir_path, project_dst_dir_path, fps, realtime_hours):
-  out_video_path = os.path.join(
-      project_dst_dir_path,
-      '%s%dfps.mp4' % (
-          '' if realtime_hours is None else '%dh_' % realtime_hours,
-          fps))
+def MakeVideo(
+    project_src_dir_path,
+    project_dst_dir_path,
+    fps,
+    pattern,
+    realtime_hours=None,
+    output_filename=None):
+  if output_filename is None:
+    out_video_path = os.path.join(
+        project_dst_dir_path,
+        '%s%dfps.mp4' % (
+            '' if realtime_hours is None else '%dh_' % realtime_hours,
+            fps))
+  else:
+    out_video_path = os.path.join(project_dst_dir_path, output_filename)
+
   if not _LatestImageNewer(project_src_dir_path, out_video_path):
     logging.info(
         'Latest file for %r not newer than %r, skipping.',
@@ -37,35 +48,30 @@ def MakeVideo(project_src_dir_path, project_dst_dir_path, fps, realtime_hours):
   logging.info(
       'Generating video for %s at %s.', proxy_project_path, out_video_path)
 
-  # When played back at `fps`, how much video time do we need in order to
-  # cover `realtime_hours`? This determines the "slice" argument to ffmpeg.
-  slice_args = []
+  oldest_frame = None
   if realtime_hours:
-    slice_args.append('-sseof')
-    # TODO Determine real elapsed time from frame timestamps, and avoid
-    # overrunning if we have too few available frames.
-    num_frames = realtime_hours * FRAMES_CAPTURED_PER_HOUR
-    output_seconds = num_frames / fps
-    slice_args.append('-%.2f' % output_seconds)
+    oldest_frame = datetime.datetime.utcnow() - datetime.timedelta(
+        hours=realtime_hours)
 
-  # Only proxy as many images as we need to generate the video.
-  for i, _ in enumerate(_IterUpdatedProxies(
-      project_src_dir_path, proxy_project_path)):
-    if i > num_frames:
-      break
+  with tempfile.TemporaryFile() as frame_list_file:
+    for frame_path in reversed(list(_IterUpdatedProxies(
+        project_src_dir_path, proxy_project_path, oldest_frame, pattern))):
+      frame_list_file.write(
+          "file '%s/%s'\nduration 1\n" % (proxy_project_path, frame_path))
 
-  ffmpeg_cmd = [
-    'ffmpeg',
-    '-r', str(fps),
-    '-y',
-  ] + slice_args + [
-    '-pattern_type', 'glob',
-    '-i', '%s%s*.jpg' % (proxy_project_path, os.path.sep),
-    '-c:v', 'libx264',
-    out_video_path,
-  ]
-  logging.info(' '.join(map(repr, ffmpeg_cmd)))
-  subprocess.check_call(ffmpeg_cmd)
+    # https://trac.ffmpeg.org/wiki/Slideshow
+    ffmpeg_cmd = [
+      'ffmpeg',
+      '-r', str(fps),
+      '-y',  # Overwrite output files without asking.
+      '-f', 'concat',
+      '-i', '-',  # Frame list file read from stdin.
+      '-vsync', 'vfr', '-pix_fmt', 'yuv420p',
+      out_video_path,
+    ]
+    logging.info(' '.join(map(repr, ffmpeg_cmd)))
+    frame_list_file.seek(0)
+    subprocess.check_call(ffmpeg_cmd, stdin=frame_list_file)
 
 
 def _LatestImageNewer(project_src_dir_path, target_file_path):
@@ -95,26 +101,27 @@ def _GetProxyProjectPath(project_src_dir_path):
   return proxy_project_path
 
 
-def _IterUpdatedProxies(project_src_dir_path, proxy_project_path):
+def _IterUpdatedProxies(project_src_dir_path, proxy_project_path, oldest_frame, pattern):
   for filename in IterProject(project_src_dir_path, reverse=True):
     local_flat_filename = _GetFlatFileName(filename)
+    if not re.match(pattern, local_flat_filename):
+      continue
     proxy_path = os.path.join(proxy_project_path, local_flat_filename)
-    if os.path.isfile(proxy_path):
-      continue  # TODO Default to trust that there are no gaps?
-    # Run `sudo apt-get install imagemagick` for `convert`.
-    subprocess.check_call([
-        'convert',
-        '-resize', '%dx%d' % (PROXY_SIZE, PROXY_SIZE),
-        '-background', '#0008', '-fill', 'white',
-        '-gravity', 'west', '-size', '%dx20' % PROXY_SIZE,
-        'caption:%s %s' % (WATERMARK, local_flat_filename),
-        filename,
-        '+swap',
-        '-gravity', 'south',
-        '-composite',
-        proxy_path,
-    ])
-    logging.info('Proxied %s at %s.', filename, proxy_path)
+    if not os.path.isfile(proxy_path):
+      # Run `sudo apt-get install imagemagick` for `convert`.
+      subprocess.check_call([
+          'convert',
+          '-resize', '%dx%d' % (PROXY_SIZE, PROXY_SIZE),
+          '-background', '#0008', '-fill', 'white',
+          '-gravity', 'west', '-size', '%dx20' % PROXY_SIZE,
+          'caption:%s %s' % (WATERMARK, local_flat_filename),
+          filename,
+          '+swap',
+          '-gravity', 'south',
+          '-composite',
+          proxy_path,
+      ])
+      logging.info('Proxied %s at %s.', filename, proxy_path)
     yield local_flat_filename
 
 
@@ -125,5 +132,19 @@ if __name__ == '__main__':
   parser.add_argument(
       '--realtime_hours', type=int,
       help='Real-world hours to cover in the time lapse (at most).')
+  parser.add_argument(
+      '--pattern', default=r'.*',
+      help='Use this regular expression to select frames for the video.'
+           + ' The pattern is matched against proxy image local filenames.')
+  parser.add_argument(
+      '-o', '--out',
+      help='Local filename (ex: video.mp4) for output video file. By default,'
+           + ' a filename is generated from fps and duration.')
   args = parser.parse_args()
-  ApplyPerProject(args.src, args.dst, MakeVideo, args.fps, args.realtime_hours)
+  ApplyPerProject(
+      args,
+      MakeVideo,
+      args.fps,
+      args.pattern,
+      realtime_hours=args.realtime_hours,
+      output_filename=args.out)
