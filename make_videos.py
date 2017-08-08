@@ -48,14 +48,14 @@ def MakeVideo(
   logging.info(
       'Generating video for %s at %s.', proxy_project_path, out_video_path)
 
-  oldest_frame = None
+  oldest_frame_time = None
   if realtime_hours:
-    oldest_frame = datetime.datetime.utcnow() - datetime.timedelta(
+    oldest_frame_time = datetime.datetime.utcnow() - datetime.timedelta(
         hours=realtime_hours)
 
   with tempfile.TemporaryFile() as frame_list_file:
     for frame_path in reversed(list(_IterUpdatedProxies(
-        project_src_dir_path, proxy_project_path, oldest_frame, pattern))):
+        project_src_dir_path, proxy_project_path, oldest_frame_time, pattern))):
       frame_list_file.write(
           "file '%s/%s'\nduration 1\n" % (proxy_project_path, frame_path))
 
@@ -84,12 +84,22 @@ def _LatestImageNewer(project_src_dir_path, target_file_path):
   return os.path.getmtime(latest_filename) > os.path.getmtime(target_file_path)
 
 
-def _GetFlatFileName(flat_or_hierarchical_path):
+def _GetFlatFileNameAndTime(flat_or_hierarchical_path):
+  # If the local filename isn't already flat (containing date as well as time),
+  # combine the path hierarchy (which includes the date) with the local name.
   _, local_filename = os.path.split(flat_or_hierarchical_path)
-  if re.match(r'^\d\d\d\d_.*$', local_filename):
-    return local_filename
+  if re.match(r'\d\d\d\d_.*', local_filename):
+    flat_filename = local_filename
   else:
-    return '_'.join(flat_or_hierarchical_path.split(os.path.sep)[-4:])
+    flat_filename = '_'.join(flat_or_hierarchical_path.split(os.path.sep)[-4:])
+
+  # Extract YYYY MM DD HH MM SS from the filename.
+  date_match = re.match(
+      r'(\d\d\d\d)_(\d\d)_(\d\d)_(\d\d)_(\d\d)_(\d\d)\..*', flat_filename)
+  if not date_match:
+    raise ValueError('Could not extract date from %r.' % flat_filename)
+
+  return flat_filename, datetime.datetime(*map(int, date_match.groups()))
 
 
 def _GetProxyProjectPath(project_src_dir_path):
@@ -101,9 +111,15 @@ def _GetProxyProjectPath(project_src_dir_path):
   return proxy_project_path
 
 
-def _IterUpdatedProxies(project_src_dir_path, proxy_project_path, oldest_frame, pattern):
+def _IterUpdatedProxies(
+    project_src_dir_path, proxy_project_path, oldest_frame_time, pattern):
   for filename in IterProject(project_src_dir_path, reverse=True):
-    local_flat_filename = _GetFlatFileName(filename)
+    local_flat_filename, frame_time = _GetFlatFileNameAndTime(filename)
+    if (oldest_frame_time is not None) and (frame_time < oldest_frame_time):
+      logging.info(
+          '%s (%s) older than %s, done iterating.',
+          filename, frame_time, oldest_frame_time)
+      return
     if not re.match(pattern, local_flat_filename):
       continue
     proxy_path = os.path.join(proxy_project_path, local_flat_filename)
