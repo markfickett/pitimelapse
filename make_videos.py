@@ -28,7 +28,8 @@ def MakeVideo(
     fps,
     pattern,
     realtime_hours=None,
-    output_filename=None):
+    output_filename=None,
+    force=False):
   if output_filename is None:
     out_video_path = os.path.join(
         project_dst_dir_path,
@@ -40,9 +41,12 @@ def MakeVideo(
 
   if not _LatestImageNewer(project_src_dir_path, out_video_path):
     logging.info(
-        'Latest file for %r not newer than %r, skipping.',
-        project_src_dir_path, out_video_path)
-    return
+        'Latest file for %r not newer than %r. %s',
+        project_src_dir_path,
+        out_video_path,
+        'Overwriting.' if force else 'Skipping.')
+    if not force:
+      return
 
   proxy_project_path = _GetProxyProjectPath(project_src_dir_path)
   logging.info(
@@ -57,9 +61,12 @@ def MakeVideo(
     for frame_path in reversed(list(_IterUpdatedProxies(
         project_src_dir_path, proxy_project_path, oldest_frame_time, pattern))):
       frame_list_file.write(
-          "file '%s/%s'\nduration 1\n" % (proxy_project_path, frame_path))
+          "file '%s/%s'\nduration %d\n" %
+          (proxy_project_path, frame_path, 1000 / fps))
 
     # https://trac.ffmpeg.org/wiki/Slideshow
+    # Both output frame rate here and duration above in the frame list to
+    # concatenation seem to be required.
     ffmpeg_cmd = [
       'ffmpeg',
       '-r', str(fps),
@@ -156,6 +163,9 @@ if __name__ == '__main__':
       '-o', '--out',
       help='Local filename (ex: video.mp4) for output video file. By default,'
            + ' a filename is generated from fps and duration.')
+  parser.add_argument(
+      '-f', '--force', action='store_true',
+      help='Always regenerate the video, even if no new frames are detected.')
   args = parser.parse_args()
   ApplyPerProject(
       args,
@@ -163,4 +173,5 @@ if __name__ == '__main__':
       args.fps,
       args.pattern,
       realtime_hours=args.realtime_hours,
-      output_filename=args.out)
+      output_filename=args.out,
+      force=args.force)
