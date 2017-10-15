@@ -4,6 +4,16 @@ import os
 import re
 
 
+IGNORE_FILES = ('.DS_Store',)
+
+
+def _list_absolute_paths(src_dir, reverse):
+  child_dirs = [
+      os.path.join(src_dir, f) for f in os.listdir(src_dir)
+      if f not in IGNORE_FILES]
+  return sorted(child_dirs, reverse=reverse)
+
+
 def IterProject(project_dir_path, reverse=True):
   filenames = os.listdir(project_dir_path)
   if not filenames:
@@ -11,17 +21,19 @@ def IterProject(project_dir_path, reverse=True):
     return
   if re.match(r'^\d\d\d\d$', filenames[0]):
     # Expect YYYY/MM/DD/HH_MM_SS.ext hierarchy.
-    year_dirs = [os.path.join(project_dir_path, f) for f in filenames]
-    for year_dir in sorted(year_dirs, reverse=reverse):
-      month_dirs = [os.path.join(year_dir, f) for f in os.listdir(year_dir)]
-      for month_dir in sorted(month_dirs, reverse=reverse):
-        day_dirs = [os.path.join(month_dir, f) for f in os.listdir(month_dir)]
-        for day_dir in sorted(day_dirs, reverse=reverse):
-          for filename in sorted(os.listdir(day_dir), reverse=reverse):
-            yield os.path.join(day_dir, filename)
+    year_dirs = _list_absolute_paths(project_dir_path, reverse)
+    for year_dir in year_dirs:
+      month_dirs = _list_absolute_paths(year_dir, reverse)
+      for month_dir in month_dirs:
+        day_dirs = _list_absolute_paths(month_dir, reverse)
+        for day_dir in day_dirs:
+          for filename in _list_absolute_paths(day_dir, reverse):
+            yield filename
   else:
     # Expect a flat directory of YYYY_MM_DD_HH_MM_SS.ext files.
     for filename in sorted(filenames, reverse=reverse):
+      if filename in IGNORE_FILES:
+        continue
       yield os.path.join(project_dir_path, filename)
 
 
