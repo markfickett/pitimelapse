@@ -13,6 +13,7 @@ import tempfile
 from main_util import ApplyPerProject
 from main_util import ConfigureLogging
 from main_util import GetSrcDstParser
+from project import GetFlatFilenameAndPath
 from project import GetProjectLatest
 from project import IterProject
 
@@ -91,24 +92,6 @@ def _LatestImageNewer(project_src_dir_path, target_file_path):
   return os.path.getmtime(latest_filename) > os.path.getmtime(target_file_path)
 
 
-def _GetFlatFileNameAndTime(flat_or_hierarchical_path):
-  # If the local filename isn't already flat (containing date as well as time),
-  # combine the path hierarchy (which includes the date) with the local name.
-  _, local_filename = os.path.split(flat_or_hierarchical_path)
-  if re.match(r'\d\d\d\d_.*', local_filename):
-    flat_filename = local_filename
-  else:
-    flat_filename = '_'.join(flat_or_hierarchical_path.split(os.path.sep)[-4:])
-
-  # Extract YYYY MM DD HH MM SS from the filename.
-  date_match = re.match(
-      r'(\d\d\d\d)_(\d\d)_(\d\d)_(\d\d)_(\d\d)_(\d\d)\..*', flat_filename)
-  if not date_match:
-    raise ValueError('Could not extract date from %r.' % flat_filename)
-
-  return flat_filename, datetime.datetime(*map(int, date_match.groups()))
-
-
 def _GetProxyProjectPath(project_src_dir_path):
   src_dir_path, project_name = os.path.split(project_src_dir_path)
   proxy_project_path = os.path.join(
@@ -121,7 +104,7 @@ def _GetProxyProjectPath(project_src_dir_path):
 def _IterUpdatedProxies(
     project_src_dir_path, proxy_project_path, oldest_frame_time, pattern):
   for filename in IterProject(project_src_dir_path, reverse=True):
-    local_flat_filename, frame_time = _GetFlatFileNameAndTime(filename)
+    local_flat_filename, frame_time = GetFlatFileNameAndTime(filename)
     if (oldest_frame_time is not None) and (frame_time < oldest_frame_time):
       logging.info(
           '%s (%s) older than %s, done iterating.',
