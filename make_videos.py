@@ -13,7 +13,7 @@ import tempfile
 from main_util import ApplyPerProject
 from main_util import ConfigureLogging
 from main_util import GetSrcDstParser
-from project import GetFlatFilenameAndPath
+from project import GetFlatFileNameAndTime
 from project import GetProjectLatest
 from project import IterProject
 
