@@ -85,3 +85,7 @@ Breifly: `screen /dev/tty.usbserial-A50285BI 115200`.
 *   System Preferences... > Sharing > Internet Sharing
 *   Run `arp -i bridge100 -a` to find connected clients' IP addresses. Note that the bridge network won't be created unless the host Mac has a WiFi connection (not just having WiFi on).
 *   `ssh 192.168.2.3` or whatever your Pi's address is.
+
+## Related
+
+[RPi timelapse using USB webcam](https://github.com/alvarop/timelapse)
