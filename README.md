@@ -69,6 +69,16 @@ network = {
 
 More in the [Pi WiFi docs](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md).
 
+## Reimage the Pi
+
+[OS Installation Instructions](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md)
+
+```
+diskutil unmountDisk /dev/disk2
+sudo dd bs=1m if=/path/to/.../*raspbian*.img of=/dev/rdisk2 conv=sync
+^T  # for status
+```
+
 ## Connecting to a Pi
 
 If simply `ssh`ing into the Pi isn't available:
