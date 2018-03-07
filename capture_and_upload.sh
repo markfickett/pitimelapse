@@ -41,6 +41,7 @@ function check_used()
   USED_PERCENT=`df -h $IMG_DIR | tail -1 | sed 's/.*\s\([0-9]\+\)%.*/\1/g'`
 }
 check_used
+# TODO Fix finding oldest, below, to avoid too-long error from ls.
 while [ $USED_PERCENT -ge 85 ]
 do
   OLDEST=`ls -t $IMG_BASE/$PROJECT/*/*/*/* | tail -1`
