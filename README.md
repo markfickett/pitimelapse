@@ -79,6 +79,8 @@ sudo dd bs=1m if=/path/to/.../*raspbian*.img of=/dev/rdisk2 conv=sync
 ^T  # for status
 ```
 
+After boot, run `sudo raspi-config`.
+
 ## Connecting to a Pi
 
 If simply `ssh`ing into the Pi isn't available:
