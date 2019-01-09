@@ -89,7 +89,7 @@ If simply `ssh`ing into the Pi isn't available:
 
 See [RPi Serial Connection](http://elinux.org/RPi_Serial_Connection), also a [Pi Zero walkthrough](http://hackers.gallery/850/misc/raspberry-pi-zero-setting-up-wifi-over-the-serial-console).
 
-Breifly: `screen /dev/tty.usbserial-A50285BI 115200`.
+Breifly: `screen /dev/tty.usbserial-A50285BI 115200`. From the corner pin (opposite USB ports), the pins are 5V, 5V, Ground, Tx, Rx. Connect Ground/Tx/Rx to a 3.3v USB serial connector.
 
 ### Share wired network from a Mac
 
