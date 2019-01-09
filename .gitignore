@@ -2,3 +2,4 @@ project.sh
 test
 rsync.lock
 *.pyc
+*.swp
