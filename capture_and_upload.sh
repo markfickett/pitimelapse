@@ -64,6 +64,7 @@ raspistill --output $IMG --quality 85 $RASPISTILL_OPTS $NIGHT_MODE
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2
 if [ -z "$NO_RSYNC" ]
 then
+  # TODO Does this recover if rsync fails (ex: network error)?
   if ! flock -n rsync.lock \
       rsync --archive --recursive $IMG_BASE/$PROJECT $REMOTE_PATH
   then
