@@ -72,8 +72,10 @@ def MakeVideo(
       'ffmpeg',
       '-r', str(fps),
       '-y',  # Overwrite output files without asking.
-      '-f', 'concat',
-      '-i', '-',  # Frame list file read from stdin.
+      '-f', 'concat',  # Use the concat demuxer as the input format.
+      '-protocol_whitelist', 'file,pipe',  # allowed read sources
+      '-safe', '0',  # Allow filenames with potentially non-portable characters.
+      '-i', 'pipe:0',  # Frame list file read from stdin.
       '-vsync', 'vfr', '-pix_fmt', 'yuv420p',
       out_video_path,
     ]
